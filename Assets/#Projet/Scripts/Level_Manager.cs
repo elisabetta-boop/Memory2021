@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Level_Manager : MonoBehaviour
 {
@@ -21,6 +22,8 @@ public class Level_Manager : MonoBehaviour
     public List<int> selected = new List<int>();
     public List<int> matches = new List<int>();
     private Dictionary<int,Material> itemMaterial = new Dictionary<int, Material>();
+    public UnityEvent whenPlayerWins;
+
 
     // Start is called before the first frame update
     void Start()
@@ -78,6 +81,13 @@ public class Level_Manager : MonoBehaviour
         ResetMaterial(id2);
         resetOnGoing = false;
     }
+    private IEnumerator Win() 
+    {
+        yield return new WaitForSeconds(timeBeforeReset);
+        // if (whenPlayerWins != null) { whenPlayerWins.Invoke();}
+        whenPlayerWins?.Invoke();
+        
+    }
     public void RevealMaterial(int id) 
     {
         if (resetOnGoing == false  && !selected.Contains(id) && !matches.Contains(id))
@@ -85,28 +95,40 @@ public class Level_Manager : MonoBehaviour
             selected.Add(id);
             Material material = itemMaterial[id];
             items[id].GetComponent<Renderer>().material = itemMaterial[id];
-
+            items[id].HasBeenSelected(true);
         }
     }
     private void ResetMaterial(int id) 
     {
         items[id].GetComponent<Renderer>().material = defaultColor;
+        items[id].HasBeenSelected(false);
     }
     void Update()
     {
+        
         if(selected.Count == 2) 
         {
+            print("ciao");
             if (itemMaterial[selected[0]] == itemMaterial[selected[1]]) 
             {
                 Debug.Log("Bingo!");
                 matches.Add(selected[0]);
                 matches.Add(selected[1]);
-            }
-            else 
+                items[selected[0]].HasBeenMatch();
+                items[selected[1]].HasBeenMatch();
+                if (matches.Count >= row*col) 
+                {
+                    StartCoroutine(Win());
+
+                }}
+            else //ici ne sont pas correct
             {
+                print("miao");
                 StartCoroutine(ResetMaterials(selected[0], selected[1]));
+                
             }
             selected.Clear();
         }
     }
 }
+
