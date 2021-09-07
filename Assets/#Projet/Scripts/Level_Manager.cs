@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
+
 
 public class Level_Manager : MonoBehaviour
 {
-    public int row = 3;
-    public int col = 4;
+    private int row;
+    private int col;
 
     public float gapRow = 1.5f;
 
@@ -23,11 +25,16 @@ public class Level_Manager : MonoBehaviour
     public List<int> matches = new List<int>();
     private Dictionary<int,Material> itemMaterial = new Dictionary<int, Material>();
     public UnityEvent whenPlayerWins;
+    private float timer = 0;
+    
 
 
     // Start is called before the first frame update
     void Start()
     {
+        row = PlayerPrefs.GetInt("row",3);
+        col = PlayerPrefs.GetInt("col",4);
+
         items = new Item_Behaviour[row*col];
         int index = 0;
 
@@ -86,6 +93,10 @@ public class Level_Manager : MonoBehaviour
         yield return new WaitForSeconds(timeBeforeReset);
         // if (whenPlayerWins != null) { whenPlayerWins.Invoke();}
         whenPlayerWins?.Invoke();
+        print("OKAY you WON!!!!!");
+        // PlayerPrefs.SetFloat("time", timer);
+        
+        // print(timer);
         
     }
     public void RevealMaterial(int id) 
@@ -103,9 +114,20 @@ public class Level_Manager : MonoBehaviour
         items[id].GetComponent<Renderer>().material = defaultColor;
         items[id].HasBeenSelected(false);
     }
+
+    // public static void UpdateScore()
+    // {
+    //     if(time < PlayerPrefs.GetFloat("Highscore",timer))
+    //     {
+    //         PlayerPrefs.SetFloat("Highscore", Timer.time);
+    //     }
+    // }
     void Update()
     {
+        timer += Time.deltaTime;
+        // print(timer);
         
+
         if(selected.Count == 2) 
         {
             print("ciao");
@@ -116,14 +138,17 @@ public class Level_Manager : MonoBehaviour
                 matches.Add(selected[1]);
                 items[selected[0]].HasBeenMatch();
                 items[selected[1]].HasBeenMatch();
+
                 if (matches.Count >= row*col) 
                 {
+                    PlayerPrefs.SetFloat("timer", timer);
                     StartCoroutine(Win());
+                    
 
                 }}
             else //ici ne sont pas correct
             {
-                print("miao");
+                print("miao_startcoroutine");
                 StartCoroutine(ResetMaterials(selected[0], selected[1]));
                 
             }
